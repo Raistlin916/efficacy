@@ -1,0 +1,155 @@
+<!doctype html>
+<html>
+	<head>
+		<link rel="stylesheet" href="http://cdn.staticfile.org/twitter-bootstrap/3.0.0-rc2/css/bootstrap.min.css">
+		<title>efficacy</title>
+		<script src="efficacy.js"></script>
+		<style>
+			header {
+				height: 50px;
+				padding: 10px;
+				padding-left: 140px;
+				background: #3498db;
+			}
+			section {
+				margin-left: 100px;
+				height: 200px;
+			}
+			section .btn {
+				margin-top: 40px;
+				margin-left: 40px;
+			}
+			aside {
+				float: left;
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<div class="btn btn-default" onclick="toggleLoop(this)">pause</div>
+		</header>
+		<aside>
+			<canvas width=100 height=600></canvas>
+		</aside>
+		
+		<section>
+			<div class="btn btn-default">reverse</div>
+			<div class="btn btn-default">restart</div>
+		</section>
+		<section>
+			<div class="btn btn-default">reverse</div>
+			<div class="btn btn-default">restart</div>
+		</section>
+		<section>
+			<div class="btn btn-default">reverse</div>
+			<div class="btn btn-default">restart</div>
+		</section>
+	
+		<script>
+			"use strict";
+			window.requestAnimFrame = (function(){
+			  return  window.requestAnimationFrame       ||
+			          window.webkitRequestAnimationFrame ||
+			          window.mozRequestAnimationFrame    ||
+			          function( callback ){
+			            window.setTimeout(callback, 1000 / 60);
+			          };
+			})();
+
+			var canvas = document.querySelector('canvas')
+			, ctx = canvas.getContext('2d');
+			var img = new Image;
+			img.onload = function(){
+
+				var imageData = getImageData(ctx, img, 40, 40);
+				var effects = [
+									particleEffects.create('a', imageData, 40, 40, {fade: 3}), 
+									particleEffects.create('b', imageData, 40, 40), 
+									particleEffects.create('c', imageData, 40, 40)
+								];
+
+				effects[0].onend = function(){
+					this.restart();
+				}
+
+				effects[1].onend = function(){
+					this.reverse();
+				}
+
+				var btns = document.querySelectorAll('section .btn');
+				effects.forEach(function(item, n){
+					btns[n*2].onclick = function(){
+						effects[n].reverse();
+					}
+					btns[n*2+1].onclick = function(){
+						effects[n].restart();
+					}
+				});
+
+				loop.fix(function(dt){
+					ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+					var n = effects.length;
+					while(n--){
+						effects[n].play(ctx, dt, 30, n*200 + 30);
+					}
+				});
+				loop.start();
+			}
+			
+			var loop = (function(){
+				var last = +new Date,
+					cont = true, update;
+				function l(){
+					if(!cont) return;
+
+					var now = new Date,
+						dt = (now - last)/1000;
+					update(dt);
+					last = now;
+					requestAnimFrame(l);
+				}
+				return {
+					start: function(){
+						cont = true;
+						last = +new Date;
+						l();
+					},
+					fix: function(u){
+						update = u;
+					},
+					pause: function(){
+						cont = false;
+					}
+				}
+			})();
+
+			var toggleLoop = (function(){
+				var s = true;
+				return function (elem){
+					if(s){
+						loop.pause();
+						elem.innerHTML = 'start';
+					} else {
+						loop.start();
+						elem.innerHTML = 'pause';
+					}
+					
+					s = !s;
+				};
+			})();
+			
+
+			var log = (function(){
+				var count = 0;
+				return function(){
+					if( count < 50){
+						console.log.apply(console, arguments);
+						count ++;
+					}
+				}
+			})();
+
+			img.src = 'character_gold_dee.png';
+		</script>
+	</body>
+</html>
