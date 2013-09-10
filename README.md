@@ -1,1 +1,1 @@
-an efficacy of particles script for HTML5 canvas
+an efficacy of particles script for HTML5 canvas.
